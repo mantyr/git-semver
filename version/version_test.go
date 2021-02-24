@@ -132,6 +132,11 @@ func TestFormat(t *testing.T) {
 			"1.2.4",
 		},
 		{
+			ReleaseCandidate,
+			"",
+			"1.2.4-rc.1",
+		},
+		{
 			NoPatchFormat,
 			"",
 			"1.2",
@@ -152,6 +157,44 @@ func TestFormat(t *testing.T) {
 		assert.NoError(err)
 		assert.Equal(test.s, s)
 	}
+}
+
+func TestReleaseCandidateFormat(t *testing.T) {
+	assert := assert.New(t)
+	for _, test := range []struct {
+		version Version
+		f string
+		s string
+	}{
+		{
+			Version{Major: 1, Minor: 2, Patch: 3, Commits: 10, Meta: "fcf2c8f"},
+			ReleaseCandidate,
+			"1.2.4-rc.1",
+		},
+		{
+			Version{Major: 1, Minor: 2, Patch: 3, preRelease: "rc.1", Commits: 10, Meta: "fcf2c8f"},
+			ReleaseCandidate,
+			"1.2.3-rc.2",
+		},
+		{
+			Version{Prefix: "test", Major: 1, Minor: 2, Patch: 3, preRelease: "rc.10", Commits: 10, Meta: "fcf2c8f"},
+			ReleaseCandidate,
+			"test1.2.3-rc.11",
+		},
+		{
+			Version{Prefix: "test", Major: 1, Minor: 2, Patch: 3, preRelease: "rc.10", Commits: 0, Meta: "fcf2c8f"},
+			ReleaseCandidate,
+			"test1.2.3-rc.10",
+		},
+	} {
+		s, err := test.version.Format(test.f)
+		assert.NoError(err)
+		assert.Equal(test.s, s)
+	}
+	v := Version{Prefix: "test", Major: 1, Minor: 2, Patch: 3, preRelease: "rc10", Commits: 0, Meta: "fcf2c8f"}
+	s, err := v.Format(ReleaseCandidate)
+	assert.EqualError(err, "pre-release does not match the release-candidate format (rc.1, other.1)")
+	assert.Equal("", s)
 }
 
 func TestInvalidFormat(t *testing.T) {

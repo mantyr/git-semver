@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"errors"
 	"strings"
 )
 
@@ -17,6 +18,7 @@ const (
 	NoPreFormat   = "x.y.z"
 	NoPatchFormat = "x.y"
 	NoMinorFormat = "x"
+	ReleaseCandidate = "x.y.z-r"
 )
 
 type buffer []byte
@@ -41,6 +43,7 @@ type Version struct {
 	preRelease string
 	Commits    int
 	Meta       string
+	releaseCandidate int
 }
 
 // Format returns a string representation of the version including the parts
@@ -50,11 +53,12 @@ type Version struct {
 // * z -> patch version
 // * p -> pre-release
 // * m -> metadata
+// * r -> release-candidate
 // x, y and z are separated by a dot. p is seprated by a hyphen and m by a plus sing.
 // E.g.: x.y.z-p+m or x.y
 func (v Version) Format(format string) (string, error) {
 	re := regexp.MustCompile(
-		`(?P<major>x)(?P<minor>\.y)?(?P<patch>\.z)?(?P<pre>-p)?(?P<meta>\+m)?`)
+		`(?P<major>x)(?P<minor>\.y)?(?P<patch>\.z)?(?P<pre>-p)?(?P<release_candidate>-r)?(?P<meta>\+m)?`)
 
 	matches := re.FindStringSubmatch(format)
 	if matches == nil {
@@ -81,6 +85,12 @@ func (v Version) Format(format string) (string, error) {
 			buf.AppendInt(patch, '.')
 		case "pre":
 			buf.AppendString(v.PreRelease(), '-')
+		case "release_candidate":
+			releaseCandidate, err := v.ReleaseCandidate()
+			if err != nil {
+				return "", err
+			}
+			buf.AppendString(releaseCandidate, '-')
 		case "meta":
 			buf.AppendString(v.Meta, '+')
 		}
@@ -107,6 +117,28 @@ func (v Version) PreRelease() string {
 		return fmt.Sprintf("dev.%d", v.Commits)
 	}
 	return fmt.Sprintf("%s.dev.%d", v.preRelease, v.Commits)
+}
+
+func (v Version) ReleaseCandidate() (string, error) {
+	if v.preRelease == "" {
+		return "rc.1", nil
+	}
+	re := regexp.MustCompile(`^([a-z]+)\.([0-9]+)$`)
+	if !re.MatchString(v.preRelease) {
+		return "", errors.New("pre-release does not match the release-candidate format (rc.1, other.1)")
+	}
+	st := re.FindStringSubmatch(v.preRelease)
+	if len(st) != 3 {
+		return "", errors.New("pre-release does not match the release-candidate format (rc.1, other.1)")
+	}
+	i, err := strconv.ParseInt(st[2], 10, 64);
+	if err != nil {
+		return "", err
+	}
+	if v.Commits > 0 {
+		i++
+	}
+	return fmt.Sprintf("%s.%d", st[1], i), nil
 }
 
 func NewFromHead(head *RepoHead) (Version, error) {

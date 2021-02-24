@@ -1,4 +1,4 @@
-module github.com/mdomke/git-semver/v6
+module github.com/mantyr/git-semver/v6
 
 go 1.15
 

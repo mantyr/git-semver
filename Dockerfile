@@ -10,7 +10,7 @@ RUN adduser \
  --no-create-home \
  --uid "${UID}" \
  "${USER}"
-WORKDIR /go/src/github.com/mdomke/git-semver
+WORKDIR /go/src/github.com/mantyr/git-semver
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags='-w -s -extldflags="-static"' -a -o /go/bin/git-semver
 

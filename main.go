@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mdomke/git-semver/v6/version"
+	"github.com/mantyr/git-semver/v6/version"
 )
 
 var prefix = flag.String("prefix", "", "prefix of version string e.g. v (default: none)")
@@ -16,6 +16,7 @@ var setMeta = flag.String("set-meta", "", "set build metadata (default: none)")
 var excludePreRelease = flag.Bool("no-pre", false, "exclude pre-release version (default: false)")
 var excludePatch = flag.Bool("no-patch", false, "exclude pre-release version (default: false)")
 var excludeMinor = flag.Bool("no-minor", false, "exclude pre-release version (default: false)")
+var releaseCandidate = flag.Bool("relese-candidate", false, "add release candidate (default: false)")
 
 func init() {
 	flag.Usage = func() {
@@ -38,6 +39,8 @@ func selectFormat() string {
 		format = version.NoPreFormat
 	case *excludeHash, *excludeMeta:
 		format = version.NoMetaFormat
+	case *releaseCandidate:
+		format = version.ReleaseCandidate
 	default:
 		format = version.FullFormat
 	}
