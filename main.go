@@ -16,7 +16,7 @@ var setMeta = flag.String("set-meta", "", "set build metadata (default: none)")
 var excludePreRelease = flag.Bool("no-pre", false, "exclude pre-release version (default: false)")
 var excludePatch = flag.Bool("no-patch", false, "exclude pre-release version (default: false)")
 var excludeMinor = flag.Bool("no-minor", false, "exclude pre-release version (default: false)")
-var releaseCandidate = flag.Bool("relese-candidate", false, "add release candidate (default: false)")
+var releaseCandidate = flag.Bool("release-candidate", false, "add release candidate (default: false)")
 
 func init() {
 	flag.Usage = func() {
